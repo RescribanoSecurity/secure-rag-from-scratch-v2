@@ -1,199 +1,103 @@
-# Secure RAG from Scratch – Documentación Técnica
+# Secure RAG from Scratch – Versión 2 (Privado)
 
-## Introducción
+Este repositorio contiene la **evolución v2** del proyecto Secure RAG from Scratch.
 
-Este proyecto es un recorrido personal de aprendizaje centrado en comprender cómo diseñar, asegurar y validar
-sistemas basados en LLM, partiendo de primeros principios.
+La versión 2 tiene como objetivo transformar el baseline local de la v1 en una
+**arquitectura modular, orientada a seguridad y con mentalidad productiva**,
+manteniéndose local-first pero preparada para entornos cloud y empresariales.
 
-En lugar de apoyarse en diagramas abstractos o servicios gestionados, el objetivo es:
-- Construir un sistema de Retrieval-Augmented Generation (RAG) desde cero
-- Aplicar controles de seguridad concretos
-- Validar el comportamiento mediante pruebas reales
-- Documentar tanto los aciertos como los errores
-- Este repositorio refleja lo que realmente he probado y aprendido, no solo lo que funcionó a la primera.
-
-## Objetivos del proyecto
-
-Los principales objetivos de este proyecto son:
-- Entender cómo funcionan los pipelines RAG de extremo a extremo
-- Identificar riesgos de seguridad reales en sistemas basados en LLM
-- Aplicar controles de seguridad de entrada, salida y auditoría
-- Aprender rompiendo, corrigiendo y validando el sistema
-- Crear una base sólida antes de evolucionar hacia entornos cloud o MLOps
-
-## Arquitectura – Versión 1 (RAG Seguro Local)
-
-Este repositorio implementa actualmente la Arquitectura v1, diseñada como una base local y orientada a la seguridad.
-
-Características principales:
-- Ejecución local
-- Sin dependencias externas necesarias para probar la seguridad
-- Puntos de control explícitos para validación de entrada, filtrado de salida y auditoría
-- Modos de ejecución configurables (local_basic, local_secure)
-
-Esta versión sirve como una línea base de referencia que evolucionará en iteraciones futuras.
-
-Flujo general:
-
-Cliente → FastAPI → Seguridad de Entrada → Pipeline RAG → Seguridad de Salida → Auditoría → Respuesta
-
-```mermaid
-flowchart LR
-    User["Usuario / Cliente"]
-    API["API FastAPI"]
-    InputSec["Seguridad de Entrada (Detección de Prompt Injection)"]
-    RAG["Pipeline RAG"]
-    VS["Vector Store (En Memoria)"]
-    LLM["Cliente LLM (Mock o Proveedor)"]
-    OutputSec["Seguridad de Salida (Detección y Redacción de PII)"]
-    Audit["Auditoría"]
-    Response["Respuesta HTTP"]
-
-    User --> API
-    API --> InputSec
-    InputSec --> RAG
-    RAG --> VS
-    RAG --> LLM
-    LLM --> OutputSec
-    OutputSec --> Audit
-    Audit --> Response
-    Response --> User
-```
+Este repositorio es actualmente **privado** y se encuentra en desarrollo activo.
 
 ---
 
-## Modos de Ejecución (APP_MODE)
+## Objetivos de la Versión 2
 
-El sistema permite un endurecimiento progresivo de la seguridad mediante distintos modos de ejecución.
+Los objetivos principales de la v2 son:
 
-```mermaid
-flowchart TB
-    subgraph LocalBasic["APP_MODE = local_basic"]
-        LB1["Seguridad de Entrada"]
-        LB2["Pipeline RAG"]
-        LB3["Respuesta del LLM"]
-    end
-
-    subgraph LocalSecure["APP_MODE = local_secure"]
-        LS1["Seguridad de Entrada"]
-        LS2["Pipeline RAG"]
-        LS3["Seguridad de Salida (Redacción de PII)"]
-        LS4["Auditoría"]
-    end
-
-    LB1 --> LB2 --> LB3
-    LS1 --> LS2 --> LS3 --> LS4
-4
-```
-## Enfoque de Seguridad
-
-Los controles de seguridad se implementan intencionadamente fuera del LLM.
-
-Este proyecto se centra en tres capas principales de control:
-
-- **Seguridad de Entrada**
-- Detección de prompt injection
-- Bloqueo inmediato antes de ejecutar el pipeline RAG
-
-- **Seguridad de Salida**
-- Detección de información personal identificable (PII)
-- Redacción de datos sensibles antes de devolver la respuesta
-
-- **Auditoría**
-- Logs estructurados en formato JSON
-- Eventos de seguridad explícitos (blocked_input, pii_detected)
-- Diseñado para trazabilidad y futuros escenarios de cumplimiento
+- Sustituir componentes “toy” por **infraestructura real**
+- Introducir **límites arquitectónicos claros**
+- Reforzar los controles de seguridad en todo el pipeline RAG
+- Añadir **testing automatizado**, incluyendo pruebas de seguridad
+- Preparar el sistema para futuras arquitecturas cloud y enterprise
 
 ---
 
-## Flujo de Seguridad (Detalle)
+## Diferencias Clave respecto a la Versión 1
 
-```mermaid
-sequenceDiagram
-    participant User as Usuario
-    participant API as FastAPI
-    participant InputSec as Seguridad de Entrada
-    participant RAG
-    participant LLM
-    participant OutputSec as Seguridad de Salida
-    participant Audit as Auditoría
-
-    User->>API: POST /query
-    API->>InputSec: Validar query
-
-    alt Entrada maliciosa detectada
-        InputSec-->>API: Bloquear petición
-        API->>Audit: Registrar blocked_input
-        API-->>User: HTTP 400
-    else Entrada válida
-        InputSec->>RAG: Enviar query
-        RAG->>LLM: Generar respuesta
-        LLM-->>RAG: Respuesta sin procesar
-        RAG->>OutputSec: Comprobar PII (local_secure)
-        alt PII detectada
-            OutputSec->>Audit: Registrar pii_detected
-            OutputSec-->>API: Respuesta redactada
-        else Sin PII
-            OutputSec-->>API: Respuesta limpia
-        end
-        API-->>User: HTTP 200
-    end
-```
+| Área | v1 | v2 |
+|----|----|----|
+| Vector Store | En memoria | Qdrant (Docker) |
+| Arquitectura | Monolítica | Modular |
+| Seguridad | Entrada / Salida | Entrada, Recuperación, Salida, Políticas |
+| Testing | Manual | Automatizado + tests de seguridad |
+| Enfoque | Baseline de aprendizaje | Fundación productiva |
 
 ---
-## Validación y Pruebas
 
-Toda la validación en esta fase se realizó de forma manual, para garantizar un control total y una comprensión completa
-del comportamiento del sistema.
+## Visión General de la Arquitectura (v2)
 
-El objetivo no fue la **calidad del modelo**, sino la **correcta implementación de los controles de seguridad**.
+Secure RAG v2 se compone de las siguientes capas:
 
-### Evidencias (Capturas de Pantalla)
+- **Capa de API** (FastAPI)
+- **Core RAG** (ingesta, recuperación, construcción de prompts)
+- **Abstracción de Vector Store**
+- **Capa de Seguridad**
+- **Auditoría y Observabilidad**
+- **Framework de Testing**
 
-Las siguientes capturas documentan las validaciones realizadas:
+Los controles de seguridad se implementan **fuera del LLM** y se aplican
+en múltiples puntos del pipeline.
 
-- Arranque de la API
-- Disponibilidad de Swagger
-- Respuesta base del RAG
-- Bloqueo de prompt injection
-- Arranque en modo seguro
-- Redacción de PII
-- Logs de auditoría
+---
 
-Las capturas están disponibles en:
+## Base de Datos Vectorial: Qdrant
 
-docs/screenshots/
+La versión 2 introduce **Qdrant** como base de datos vectorial principal.
 
+Características:
 
-## Lecciones Aprendidas
+- Ejecución local mediante Docker
+- Motor de búsqueda vectorial real
+- Soporte de filtrado por metadata
+- Compatible con despliegues cloud
 
-Algunas de las principales lecciones de esta primera versión:
+El uso de una interfaz de vector store permite cambiar de implementación
+sin afectar al core del sistema RAG.
 
-- Los controles de seguridad deben validarse, no asumirse
-- El uso de un LLM simulado es clave para probar la seguridad de forma independiente
-- Ejecutar el sistema en distintos modos ha permitido detectar problemas de configuración de forma temprana
+---
 
+## Modelo de Seguridad
 
-Estas lecciones influyen directamente en el diseño de las siguientes versiones.
+La seguridad se trata como un **elemento de primer nivel**:
 
-## Fuera de Alcance (Por Ahora)
+- Seguridad de entrada (detección de prompt injection)
+- Seguridad en recuperación (control de fuentes y metadata)
+- Seguridad de salida (detección de PII y datos sensibles)
+- Auditoría estructurada con correlation IDs
 
-Los siguientes aspectos no se cubren intencionadamente en esta versión:
+---
 
-- Evaluación de la precisión del modelo
-- Pruebas de rendimiento y carga
-- Autenticación cloud y gestión de identidades (IAM)
-- Aislamiento multi-tenant
-- Persistencia de nivel productivo
+## Estrategia de Testing
 
-Estos aspectos se abordarán en iteraciones futuras.
+La versión 2 introduce testing automatizado:
 
+- Tests unitarios de componentes clave
+- Tests de integración (API y vector store)
+- Suite de tests de seguridad simulando escenarios de ataque reales
 
-## Próximos Pasos
+El objetivo no es evaluar la calidad del modelo,
+sino validar la **corrección de los controles de seguridad**.
 
-Los próximos pasos previstos incluyen:
+---
 
-- Threat modeling basado en esta arquitectura
-- Mapeo de controles frente al OWASP LLM Top 10
-- Evolución hacia una arquitectura preparada para cloud
-- Introducción de pruebas de seguridad automatizadas
+## Estado del Desarrollo
+
+La versión 2 se encuentra en desarrollo activo.
+
+Próximos pasos previstos:
+
+- Tests de integración con Qdrant
+- Expansión del motor de políticas
+- Rate limiting y control de abuso
+- Threat modeling basado en OWASP LLM Top 10
+- Patrones de despliegue cloud-ready
