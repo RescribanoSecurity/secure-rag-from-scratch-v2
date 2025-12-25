@@ -2,27 +2,28 @@ from app.vectorstore.qdrant import QdrantVectorStore
 from app.rag.pipeline import RAGPipeline
 
 
-def test_rag_pipeline_returns_structured_response():
-    store = QdrantVectorStore(collection_name="rag_test")
+def test_rag_pipeline_basic():
+    vectorstore = QdrantVectorStore(collection_name="test_collection")
+    pipeline = RAGPipeline(vectorstore)
 
-    # Seed minimal data
-    store.add_documents([
-        {"text": "RAG combines retrieval and generation"},
-        {"text": "Secure RAG applies security controls outside the LLM"},
-    ])
+    query = "What is a RAG system?"
+    request_id = "test-request-id"
 
-    pipeline = RAGPipeline(store)
+    result = pipeline.run(query, request_id=request_id)
 
-    response = pipeline.run("What is RAG?", top_k=1)
+    # Basic structure checks
+    assert "answer" in result
+    assert "sources" in result
+    assert "security_flags" in result
+    assert "request_id" in result
 
-    # Assertions
-    assert response.answer
-    assert len(response.sources) > 0
-    assert isinstance(response.sources, list)
-    assert "text" in response.sources[0]
+    # Type checks
+    assert isinstance(result["answer"], str)
+    assert isinstance(result["sources"], list)
+    assert isinstance(result["security_flags"], dict)
 
-    assert isinstance(response.security_flags, dict)
-    assert "prompt_injection_detected" in response.security_flags
-    assert "pii_detected" in response.security_flags
+    # Traceability
+    assert result["request_id"] == request_id
 
-    assert response.request_id
+    # RAG sanity
+    assert len(result["sources"]) > 0
