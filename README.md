@@ -175,14 +175,16 @@ These are planned future extensions.
 
 ---
 
-## 📑 Documentation & Presentations
+## 🌐 Project Pages & Presentations
 
-Technical presentations (EN / ES) and screenshots are published via GitHub Pages:
+- 🇬🇧 Technical Presentation (EN):  
+  https://github.com/RescribanoSecurity/secure-rag-from-scratch-v2/blob/main/docs/presentations/V2/Secure-RAG-v2-EN.pdf
 
-- 📄 Presentations:  
-`/docs/presentations/`
-- 📸 Screenshots:  
-`/docs/screenshots/`
+- 🇪🇸 Presentación Técnica (ES):  
+ https://github.com/RescribanoSecurity/secure-rag-from-scratch-v2/blob/main/docs/presentations/V2/Secure-RAG-v2-ES.pdf
+
+- 📸 Security Evidence (Screenshots):  
+  https://github.com/RescribanoSecurity/secure-rag-from-scratch-v2/tree/main/docs/screenshots
 
 ---
 
